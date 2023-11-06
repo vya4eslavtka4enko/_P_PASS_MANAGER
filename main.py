@@ -3,6 +3,7 @@ from tkinter import messagebox
 # import random
 from random import randint,shuffle,choice
 import pyperclip
+import json
 
 BGCOLOR = '#FFFFFF'
 
@@ -61,6 +62,12 @@ def saved_password():
     website = entry.get()
     email = entry_email.get()
     password = entry_password.get()
+    new_data = {
+        website: {
+            "email":email,
+            "password":password,
+        }
+    }
     if len(website) == 0:
         messagebox.showinfo("Warrning", "Empty")
         entry.delete(0, END)
@@ -69,10 +76,43 @@ def saved_password():
         is_ok = messagebox.askokcancel(title=website, message=f"There are the deitails entered : \n Email : {email}"
                                                               f"\nPassword:{password} \n Is it ok to save?")
         if is_ok:
-            with open('data.txt', mode='a') as data_file:
-                data_file.write(f"{website}  |  {email}   |    {password} |\n")
+            try:
+                with open('data.json', mode='r') as data_file:
+                    # data_file.write(f"{website}  |  {email}   |    {password} |\n")
+                    # Reading data
+                    data = json.load(data_file)
+            except FileNotFoundError:
+                with open('data.json', mode='w') as data_file:
+                    # data_file.write(f"{website}  |  {email}   |    {password} |\n")
+                    # Reading data
+                    json.dump(new_data,data_file)
+                    entry.delete(0, END)
+                    entry_password.delete(0, END)
+            else:
+                with open('data.json',mode='w') as data_file:
+                    # Update data
+                    data.update(new_data)
+                    # Saving data
+                    json.dump(data,data_file,indent = 4)
+
+            finally:
                 entry.delete(0, END)
                 entry_password.delete(0, END)
+
+def FindPassWord():
+    with open('data.json',mode='r') as data_file:
+        data = json.load(data_file)
+        website = entry.get()
+
+
+        # need website ih data
+        for k,v in data.items():
+            if website == k:
+                passw=v['password']
+                messagebox.askquestion(title = ')',message=f'Website : {website}\n Pass: {passw}')
+                print(f'Website : {website}\n Pass: {passw}')
+            else:
+                messagebox.showinfo(title = '',message = 'Not Found ')
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -81,9 +121,14 @@ label_web.config(width=15, text='Website', bg=BGCOLOR, fg="black")
 label_web.grid(column=1, row=2)
 
 entry = Entry()
-entry.config(width=35, bg=BGCOLOR, fg="black", highlightthickness=1)
-entry.grid(column=2, row=2, columnspan=2, padx=10, pady=10)
+entry.config(width=19, bg=BGCOLOR, fg="black", highlightthickness=1)
+entry.grid(column=2, row=2, padx=10, pady=10)
 entry.focus()
+
+button_search = Button()
+button_search.config(width=10, bg=BGCOLOR, fg="black", highlightthickness=0, text='Search', relief=RIDGE, borderwidth=0, highlightbackground='white',command =FindPassWord)
+button_search.grid(column=3, row=2, padx=10, pady=10)
+# ------------------
 
 label_email = Label()
 label_email.config(width=15, text='Email/Username', bg=BGCOLOR, fg="black")
